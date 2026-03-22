@@ -143,24 +143,84 @@
     }
     .controls {
       min-height: 0;
-      display: flex;
+      height: 100%;
+      box-sizing: border-box;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
       margin-top: 0;
       padding-top: 2px;
-      align-items: center;
-      justify-content: center;
+      align-items: stretch;
       overflow: hidden;
     }
+    .controls-zone {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      height: 100%;
+    }
+    .controls-zone-inner {
+      height: 95%;
+      max-height: 95%;
+      min-height: 0;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      gap: 4px;
+    }
+    .controls-zone-inner--left {
+      gap: 0;
+      justify-content: flex-start;
+    }
+    .controls-zone-inner--left .btn-toggle {
+      flex: 1 1 0;
+      min-height: 0;
+      padding: 6px 8px;
+      font-size: 22px;
+      gap: 8px;
+    }
+    .controls-zone-inner--left .btn-toggle svg {
+      width: 28px;
+      height: 28px;
+    }
+    .controls-zone-inner--left .speed-row {
+      flex: 1.5 1 0;
+      min-height: 0;
+      justify-content: center;
+    }
+    .controls-zone-inner--left .speed-btns button {
+      padding: 12px 3px;
+      font-size: calc(9px * 1.5);
+      border-radius: 6px;
+      border-width: 3px;
+    }
+    .controls-zone-inner--stats {
+      justify-content: stretch;
+      align-items: stretch;
+    }
+    .controls-zone-inner--dpad {
+      justify-content: center;
+      align-items: center;
+    }
     .dpad-wrap {
-      flex: 1;
+      width: 100%;
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 0;
     }
     .dpad-circle {
-      width: 118px;
-      height: 118px;
+      width: auto;
+      height: 100%;
+      max-height: 100%;
+      max-width: 100%;
+      aspect-ratio: 1;
       border-radius: 50%;
       background: radial-gradient(circle at 35% 30%, #e8e0d8 0%, #c9bdb0 45%, #8a7a6a 100%);
       border: 3px solid #4a3a30;
@@ -204,19 +264,13 @@
       border-radius: 50%;
       box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
     }
-    .side-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 0;
-      justify-content: center;
-    }
     .btn-toggle {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 4px;
+      width: 100%;
+      box-sizing: border-box;
       padding: 4px 8px;
       background: linear-gradient(180deg, #f5f0e6 0%, #d8cfc4 100%);
       color: #5c0a0a;
@@ -239,6 +293,8 @@
       display: flex;
       flex-direction: column;
       gap: 2px;
+      width: 100%;
+      min-width: 0;
     }
     .speed-label {
       font-size: 9px;
@@ -266,23 +322,36 @@
       color: #5c0a0a;
     }
     .stats {
-      font-size: 10px;
+      width: 100%;
+      height: 100%;
+      flex: 1 1 auto;
+      min-height: 0;
+      box-sizing: border-box;
+      font-size: 20px;
       line-height: 1.35;
       color: #ffe8e8;
-      padding: 3px 6px;
+      padding: 5px 6px;
       background: rgba(0, 0, 0, 0.2);
       border-radius: 3px;
       border: 1px solid rgba(255, 255, 255, 0.15);
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: stretch;
     }
     .stats span {
       display: block;
     }
     @media (max-width: 400px) {
       .controls {
-        flex-direction: column;
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(3, auto);
+        height: auto;
       }
-      .dpad-wrap {
-        min-height: 0;
+      .controls-zone-inner {
+        height: auto;
+        max-height: none;
       }
     }
   </style>
@@ -302,36 +371,45 @@
       </div>
     </div>
     <div class="controls">
-      <div class="side-panel">
-        <button type="button" class="btn-toggle" id="btn-play-pause" title="开始/暂停">
-          <svg id="icon-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-          <svg id="icon-pause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:none" aria-hidden="true">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-          </svg>
-          <span id="play-pause-text">开始</span>
-        </button>
-        <div class="speed-row">
-          <div class="speed-label">速度</div>
-          <div class="speed-btns" role="group" aria-label="速度三档">
-            <button type="button" data-speed="0">慢</button>
-            <button type="button" data-speed="1" class="active">中</button>
-            <button type="button" data-speed="2">快</button>
+      <div class="controls-zone">
+        <div class="controls-zone-inner controls-zone-inner--left">
+          <button type="button" class="btn-toggle" id="btn-play-pause" title="开始/暂停">
+            <svg id="icon-play" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <svg id="icon-pause" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="display:none" aria-hidden="true">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+            </svg>
+            <span id="play-pause-text">开始</span>
+          </button>
+          <div class="speed-row">
+            <div class="speed-btns" role="group" aria-label="速度三档">
+              <button type="button" data-speed="0">慢</button>
+              <button type="button" data-speed="1" class="active">中</button>
+              <button type="button" data-speed="2">快</button>
+            </div>
           </div>
         </div>
-        <div class="stats">
-          <span>时长：<strong id="stat-time">0</strong> 秒</span>
-          <span>得分：<strong id="stat-score">0</strong></span>
+      </div>
+      <div class="controls-zone">
+        <div class="controls-zone-inner controls-zone-inner--stats">
+          <div class="stats">
+            <span>时长：<strong id="stat-time">0</strong> 秒</span>
+            <span>得分：<strong id="stat-score">0</strong></span>
+          </div>
         </div>
       </div>
-      <div class="dpad-wrap">
-        <div class="dpad-circle" aria-label="方向键">
-          <button type="button" class="up" id="btn-up" aria-label="上">▲</button>
-          <button type="button" class="left" id="btn-left" aria-label="左">◀</button>
-          <div class="center" aria-hidden="true"></div>
-          <button type="button" class="right" id="btn-right" aria-label="右">▶</button>
-          <button type="button" class="down" id="btn-down" aria-label="下">▼</button>
+      <div class="controls-zone">
+        <div class="controls-zone-inner controls-zone-inner--dpad">
+          <div class="dpad-wrap">
+            <div class="dpad-circle" aria-label="方向键">
+              <button type="button" class="up" id="btn-up" aria-label="上">▲</button>
+              <button type="button" class="left" id="btn-left" aria-label="左">◀</button>
+              <div class="center" aria-hidden="true"></div>
+              <button type="button" class="right" id="btn-right" aria-label="右">▶</button>
+              <button type="button" class="down" id="btn-down" aria-label="下">▼</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
