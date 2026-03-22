@@ -337,11 +337,14 @@
       text-align: left;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: stretch;
       align-items: stretch;
     }
     .stats span {
-      display: block;
+      flex: 1 1 0;
+      display: flex;
+      align-items: center;
+      min-height: 0;
     }
     @media (max-width: 520px) {
       html {
@@ -461,8 +464,8 @@
       const ctx = canvas.getContext("2d");
       const gameOverOverlay = document.getElementById("game-over-overlay");
       const canvasAspect = canvas.closest(".canvas-aspect");
-      /** 每格像素边长；总分辨率 = COLS*CELL_PX × ROWS*CELL_PX */
-      const CELL_PX = 16;
+      /** 每格像素边长（仅影响位图清晰度；显示区域与网格逻辑不变，可调 24/32/48） */
+      const CELL_PX = 32;
 
       let audioCtx = null;
       function getAudioContext() {
