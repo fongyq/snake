@@ -248,10 +248,47 @@
       border-radius: 4px;
       user-select: none;
       touch-action: manipulation;
+      transition: background 0.12s ease, box-shadow 0.12s ease, transform 0.08s ease;
     }
-    .dpad-circle button:active {
-      transform: translateY(2px);
-      box-shadow: inset 0 -1px 0 #5c0c0c;
+    .dpad-circle .up:active,
+    .dpad-circle .up.is-pressed {
+      background: #5c0c0c;
+      transform: translateY(1px);
+      box-shadow:
+        inset 0 3px 8px rgba(255, 248, 230, 0.45),
+        inset 0 -8px 14px rgba(20, 0, 0, 0.55),
+        0 -6px 18px rgba(255, 210, 100, 0.75),
+        0 -2px 8px rgba(255, 230, 160, 0.55);
+    }
+    .dpad-circle .down:active,
+    .dpad-circle .down.is-pressed {
+      background: #5c0c0c;
+      transform: translateY(1px);
+      box-shadow:
+        inset 0 -3px 8px rgba(255, 248, 230, 0.45),
+        inset 0 8px 14px rgba(20, 0, 0, 0.55),
+        0 6px 18px rgba(255, 210, 100, 0.75),
+        0 2px 8px rgba(255, 230, 160, 0.55);
+    }
+    .dpad-circle .left:active,
+    .dpad-circle .left.is-pressed {
+      background: #5c0c0c;
+      transform: translateY(1px);
+      box-shadow:
+        inset 3px 0 8px rgba(255, 248, 230, 0.45),
+        inset -8px 0 14px rgba(20, 0, 0, 0.55),
+        -6px 0 18px rgba(255, 210, 100, 0.75),
+        -2px 0 8px rgba(255, 230, 160, 0.55);
+    }
+    .dpad-circle .right:active,
+    .dpad-circle .right.is-pressed {
+      background: #5c0c0c;
+      transform: translateY(1px);
+      box-shadow:
+        inset -3px 0 8px rgba(255, 248, 230, 0.45),
+        inset 8px 0 14px rgba(20, 0, 0, 0.55),
+        6px 0 18px rgba(255, 210, 100, 0.75),
+        2px 0 8px rgba(255, 230, 160, 0.55);
     }
     .dpad-circle .up { grid-area: up; }
     .dpad-circle .down { grid-area: down; }
@@ -864,6 +901,15 @@
         nextDir = { x: dx, y: dy };
       }
 
+      const dpadIds = ["btn-up", "btn-down", "btn-left", "btn-right"];
+      dpadIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const pressed = "is-pressed";
+        el.addEventListener("touchstart", () => el.classList.add(pressed), { passive: true });
+        el.addEventListener("touchend", () => el.classList.remove(pressed));
+        el.addEventListener("touchcancel", () => el.classList.remove(pressed));
+      });
       document.getElementById("btn-up").addEventListener("click", () => setDirection(0, -1));
       document.getElementById("btn-down").addEventListener("click", () => setDirection(0, 1));
       document.getElementById("btn-left").addEventListener("click", () => setDirection(-1, 0));
