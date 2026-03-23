@@ -530,9 +530,8 @@
       }
       .dpad-circle,
       .rudder-circle {
-        --mobile-pad-size: min(calc(100% - 2px), calc(100dvh * 0.16));
-        width: var(--mobile-pad-size);
-        height: var(--mobile-pad-size);
+        height: min(calc(100% - 32px), calc(33vw - 12px));
+        width: auto;
         max-width: calc(100% - 2px);
         max-height: calc(100% - 32px);
       }
@@ -1030,11 +1029,13 @@
       let rudderPointerId = null;
       let rudderLastAxis = null;
       let rudderLastTurnAt = 0;
+      let rudderLastOutput = { x: 0, y: 0 };
       const RUDDER_DEADZONE_RATIO = 0.3;
       const RUDDER_KNOB_LIMIT_RATIO = 0.62;
       const RUDDER_AXIS_BIAS = 1.35;
       const RUDDER_TURN_INTERVAL_MS = 70;
       const RUDDER_SWITCH_INTERVAL_MS = 110;
+      const RUDDER_SIGN_FLIP_THRESHOLD_RATIO = 0.52;
 
       function updateInputModeUI() {
         if (!dpadWrap || !btnInputMode) return;
@@ -1064,33 +1065,37 @@
         if (mag <= deadzone) {
           setRudderKnob(0, 0, limit);
           rudderLastAxis = null;
+          rudderLastOutput = { x: 0, y: 0 };
           return;
         }
         setRudderKnob(dx, dy, limit);
         let target = null;
+        const prevAxis = rudderLastAxis;
         const absX = Math.abs(dx);
         const absY = Math.abs(dy);
         if (absX > absY * RUDDER_AXIS_BIAS) {
-          rudderLastAxis = "x";
           target = { x: dx >= 0 ? 1 : -1, y: 0, axis: "x" };
         } else if (absY > absX * RUDDER_AXIS_BIAS) {
-          rudderLastAxis = "y";
           target = { x: 0, y: dy >= 0 ? 1 : -1, axis: "y" };
-        } else if (rudderLastAxis === "x") {
+        } else if (prevAxis === "x") {
           target = { x: dx >= 0 ? 1 : -1, y: 0, axis: "x" };
-        } else if (rudderLastAxis === "y") {
+        } else if (prevAxis === "y") {
           target = { x: 0, y: dy >= 0 ? 1 : -1, axis: "y" };
         }
         if (!target) return;
         if (dir.x + target.x === 0 && dir.y + target.y === 0) return;
         if (nextDir.x + target.x === 0 && nextDir.y + target.y === 0) return;
+        const flipThreshold = radius * RUDDER_SIGN_FLIP_THRESHOLD_RATIO;
+        if (target.x !== 0 && rudderLastOutput.x !== 0 && target.x !== rudderLastOutput.x && absX < flipThreshold) return;
+        if (target.y !== 0 && rudderLastOutput.y !== 0 && target.y !== rudderLastOutput.y && absY < flipThreshold) return;
         const now = performance.now();
-        const axisChanged = rudderLastAxis && target.axis !== rudderLastAxis;
+        const axisChanged = prevAxis && target.axis !== prevAxis;
         const minInterval = axisChanged ? RUDDER_SWITCH_INTERVAL_MS : RUDDER_TURN_INTERVAL_MS;
         if (now - rudderLastTurnAt < minInterval) return;
         rudderLastTurnAt = now;
         setDirection(target.x, target.y);
         rudderLastAxis = target.axis;
+        rudderLastOutput = { x: target.x, y: target.y };
       }
 
       function resetRudderVisual() {
@@ -1098,6 +1103,7 @@
         rudderCircle.classList.remove("active");
         rudderLastAxis = null;
         rudderLastTurnAt = 0;
+        rudderLastOutput = { x: 0, y: 0 };
         if (rudderKnob) {
           rudderKnob.style.transform = "translate(-50%, -50%)";
         }
