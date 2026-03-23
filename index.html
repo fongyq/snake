@@ -530,8 +530,10 @@
       }
       .dpad-circle,
       .rudder-circle {
-        width: min(100%, calc(100% - 2px));
-        height: auto;
+        --mobile-pad-size: min(calc(100% - 2px), calc(100dvh * 0.16));
+        width: var(--mobile-pad-size);
+        height: var(--mobile-pad-size);
+        max-width: calc(100% - 2px);
         max-height: calc(100% - 32px);
       }
       .input-mode-toggle {
@@ -1019,17 +1021,20 @@
 
       function setDirection(dx, dy) {
         if (!playing || paused || gameOver) return;
-        const baseDir = Math.abs(nextDir.x) + Math.abs(nextDir.y) === 0 ? dir : nextDir;
-        if (baseDir.x + dx === 0 && baseDir.y + dy === 0) return;
+        if (dir.x + dx === 0 && dir.y + dy === 0) return;
+        if (nextDir.x + dx === 0 && nextDir.y + dy === 0) return;
         nextDir = { x: dx, y: dy };
       }
 
       let inputMode = "dpad";
       let rudderPointerId = null;
       let rudderLastAxis = null;
+      let rudderLastTurnAt = 0;
       const RUDDER_DEADZONE_RATIO = 0.3;
       const RUDDER_KNOB_LIMIT_RATIO = 0.62;
-      const RUDDER_AXIS_BIAS = 1.2;
+      const RUDDER_AXIS_BIAS = 1.35;
+      const RUDDER_TURN_INTERVAL_MS = 70;
+      const RUDDER_SWITCH_INTERVAL_MS = 110;
 
       function updateInputModeUI() {
         if (!dpadWrap || !btnInputMode) return;
@@ -1062,18 +1067,39 @@
           return;
         }
         setRudderKnob(dx, dy, limit);
+        let target = null;
         const absX = Math.abs(dx);
         const absY = Math.abs(dy);
         if (absX > absY * RUDDER_AXIS_BIAS) {
           rudderLastAxis = "x";
-          setDirection(dx >= 0 ? 1 : -1, 0);
+          target = { x: dx >= 0 ? 1 : -1, y: 0, axis: "x" };
         } else if (absY > absX * RUDDER_AXIS_BIAS) {
           rudderLastAxis = "y";
-          setDirection(0, dy >= 0 ? 1 : -1);
+          target = { x: 0, y: dy >= 0 ? 1 : -1, axis: "y" };
         } else if (rudderLastAxis === "x") {
-          setDirection(dx >= 0 ? 1 : -1, 0);
+          target = { x: dx >= 0 ? 1 : -1, y: 0, axis: "x" };
         } else if (rudderLastAxis === "y") {
-          setDirection(0, dy >= 0 ? 1 : -1);
+          target = { x: 0, y: dy >= 0 ? 1 : -1, axis: "y" };
+        }
+        if (!target) return;
+        if (dir.x + target.x === 0 && dir.y + target.y === 0) return;
+        if (nextDir.x + target.x === 0 && nextDir.y + target.y === 0) return;
+        const now = performance.now();
+        const axisChanged = rudderLastAxis && target.axis !== rudderLastAxis;
+        const minInterval = axisChanged ? RUDDER_SWITCH_INTERVAL_MS : RUDDER_TURN_INTERVAL_MS;
+        if (now - rudderLastTurnAt < minInterval) return;
+        rudderLastTurnAt = now;
+        setDirection(target.x, target.y);
+        rudderLastAxis = target.axis;
+      }
+
+      function resetRudderVisual() {
+        if (!rudderCircle) return;
+        rudderCircle.classList.remove("active");
+        rudderLastAxis = null;
+        rudderLastTurnAt = 0;
+        if (rudderKnob) {
+          rudderKnob.style.transform = "translate(-50%, -50%)";
         }
       }
 
@@ -1086,15 +1112,6 @@
         const dy = clientY - cy;
         const radius = Math.min(rect.width, rect.height) * 0.5;
         handleRudderDirection(dx, dy, radius);
-      }
-
-      function resetRudderVisual() {
-        if (!rudderCircle) return;
-        rudderCircle.classList.remove("active");
-        rudderLastAxis = null;
-        if (rudderKnob) {
-          rudderKnob.style.transform = "translate(-50%, -50%)";
-        }
       }
 
       const dpadIds = ["btn-up", "btn-down", "btn-left", "btn-right"];
